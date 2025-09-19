@@ -25,6 +25,7 @@ stepsCount = len(steps)
 for i, step in enumerate(steps):
     stepInformation = dict()
     id = step["id"]
+    stepInformation["Action Type"] = step["type"]
     if id not in capturedEventsDict.keys() and step["type"] != "CHAPTER":
         continue    
     #These generally capture a broad user choice (e.g. starting/restarting activity). This is a good anchor point to begin.
@@ -85,13 +86,13 @@ for info in coreInformation:
             Finally, to learn more details about the action, read the Page Description and Image Url fields. 
             Skim over all other fields.
 
-            Here is an example: 'Image Url': 'test_url.com/image/myimage.png', 'User Action': 'Enter the side menu through clicking the hamburger bar', 'Page Url': 'test_url_2.com', 'Page Description': 'test_url_2.com/wallet_developer_test'
+            Here is an example: 'Image Url': 'wallets_test.com/image/myimage.png', 'User Action': 'Enter the side menu through clicking the hamburger bar', 'Page Url': 'wallets_test.com', 'Page Description': 'wallets_test.com/wallet_developer_flow'
 
             In this case, you would first read the User Action. Then, you would follow up by reading the Page Description and Image Url. Finally, you would skim through the Page Url.
 
             This should give you enough information to say (example): "Clicked hamburger menu on wallet page"
 
-            If you are on the edge of adding more versus less context, *add the context.* Make sure to read all information at least once before returning a response. 
+            If you are on the edge of adding more versus less context, *add the context.* Specifically, if the context is the site name, INCLUDE it. Make sure to read all information at least once before returning a response. 
 
             Now, it is your turn. Here is the necessary json data:
             {info}
@@ -140,6 +141,8 @@ refined_list = model.chat.completions.create(
         Clicked on wallet image.
         User clicked on wallet image.
         ]
+
+        Notice how the example does NOT change the amount of items in the list.
         
         Now, it is your turn. The only things you can do are 
         1.) Remove REPEATED context
@@ -197,7 +200,7 @@ summarized_markdown = model.chat.completions.create(
 
         
         Now, it is your turn. Return the original input followed by the user summary in markdown. Here is the input list:
-        {responses}
+        {refined_list}
         """
     }]
 )
@@ -215,7 +218,6 @@ social_media_image = model.images.generate(
 
         You will be given markdown information of individual user actions and a summary.
         Given this list, you are to add a markdown summary that explains in a concise, readable way what the user did throughout the list actions. 
-        Further, you must add the "User Interactions" header to the original input, and the "Summary" header to the summary.
 
         Here's an example:
         Input: 
@@ -231,20 +233,24 @@ social_media_image = model.images.generate(
 
         Output: 
         Image where flow should appear as a clear left-to-right (or top-to-bottom) sequence of steps connected by arrows, each paired with a simple icon and short label, ending in a bold summary box. 
-        Modern, minimal design with a professional color palette (teal/blue/white) and clear typography and non-transparent background. Avoids awkward chunks of whitespace. The title is 2-3 words about the ease of buying the product. 
+        Modern, minimal design with a professional color palette (teal/blue/white) and clear typography and non-transparent background. Avoids awkward chunks of whitespace. Make sure that text is not cut off and that there is white space / padding on the sides. 
+        The title is 3-5 words about the ease of buying the wallet. Uses some version of the word BUY. Uses a variant of the word EASE.
         Designed to grab attention and stand out in social media feeds, while maintaining an air of professionality. Is concise where words are necessary, often opting for icons where possible. Focuses on sleek functionality of application.
-        Ignores sections from the input with possible negative connotations. Focuses on what the user did, ignoring what the user did not do. Uses exclamation marks and conveys excitement about the product and usage tools.
-        Does NOT include any Summary sections and instead provides eye-catching visuals of a satisfied customer (in the same art style) interacting with their purchased product. The satisfied user takes up about 35-45% of the lower image.
-        Focuses largely on catching user attention and providing aesthetic user engagement. 
-        
-        Now, it is your turn.
+        Ignores sections from the input with possible negative connotations, such as things that were declined, forgotten, or any sub-optimal decisions. Focuses on what the user did, ignoring what the user did not do. Uses exclamation marks and conveys excitement about the product and usage tools.
+        Does NOT include any Summary sections and instead provides eye-catching visuals of a satisfied customer (in the same art style) interacting with their purchased wallet. The satisfied user takes up about 35-45% of the lower image.
+        Focuses largely on catching user attention and providing aesthetic user engagement.  Writes the purchasing website subtly on the page, but not in the title. On this page, it says Try Wallets Test today! ONLY use this if the site is known.
+        Again, does NOT provide a summary of what happened. Adds logo and adapts color scheme for purchase website if it is found. If unknown, this step is ignored. Visual aesthetic is top priority. 
+
+        Now, it is your turn. Use the example as a guideline. Use the specific product and specific website from the input, NOT the example.
 
         Here is the input markdown:
-        {responses}
+        {summarized_markdown}
     """
 )   
+#Puts the image into a format we can write to png.
 image_base64 = social_media_image.data[0].b64_json 
 image_bytes = base64.b64decode(image_base64)
 
+#Writes image to output folder.
 with open("./output/social_media_image.png", "wb") as f:
     f.write(image_bytes)
