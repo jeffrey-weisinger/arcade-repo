@@ -254,3 +254,8 @@ image_bytes = base64.b64decode(image_base64)
 #Writes image to output folder.
 with open("./output/social_media_image.png", "wb") as f:
     f.write(image_bytes)
+#Adds image to Markdown
+with open("./output/summary.md", "a", encoding="utf-8") as f:
+    f.write("\n\n")
+    f.write("## Social Media Image\n")
+    f.write("![Flow Image](social_media_image.png)")
