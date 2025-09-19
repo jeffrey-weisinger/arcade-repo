@@ -72,7 +72,7 @@ for info in coreInformation:
     response = model.chat.completions.create(
         model = "gpt-4o-mini",
         messages = [
-            {"role": "system", "content": "You are an assistant that will concisely summarize flow data."},
+            {"role": "system", "content": "You are an assistant that will concisely refine flow data."},
             {"role": "user", "content": 
             f"""
             Given the json-formatted information regarding an action that a user took on a flow model, 
@@ -106,7 +106,7 @@ for info in coreInformation:
 refined_list = model.chat.completions.create(
     model = "chatgpt-4o-latest",
     messages = [
-        {"role": "system", "content": "You are an assistant that will concisely summarize flow data."},
+        {"role": "system", "content": "You are an assistant that will refine flow data."},
         {"role": "user", "content": 
         f"""
         Given the json-formatted information regarding an action that a user took on a flow model, refine the summary items of user actions. 
@@ -114,12 +114,13 @@ refined_list = model.chat.completions.create(
         Importantly, you should ONLY remove CONTEXT that has been repeated. Your goal is to find this context and remove it so that the text is nicer to read. 
 
         Here's an example of repeated context that you could remove
+        Input:
         [
         "Clicked on wallet image at wallets_test.com"
         "On wallets_test.com, clicked on reviews"
         "Typed review regarding luxury wallet on wallets_test.com" 
         ]
-        Becomes
+        Output:
         [
         "Clicked on wallet image at wallets_test.com"
         "Clicked on reviews section"
@@ -129,12 +130,13 @@ refined_list = model.chat.completions.create(
         Again, only remove REPEATED context. Do not remove words descriptor words. For example, "luxury" above was not removed. 
 
         Here's another example:
+        Input:
         [
         "Clicked on wallet image at wallets_test.com"
         "Clicked on a wallet image at wallets_test.com"
         "User clicks on wallet image at wallets_test.com" 
         ]
-        Becomes
+        Output:
         [
         Clicked on wallet image at wallets_test.com
         Clicked on wallet image.
@@ -156,6 +158,50 @@ refined_list = model.chat.completions.create(
     }]
 )
 # 
-# summarized_markdown = 
-print(responses)
-print(refined_list.choices[0].message.content)
+summarized_markdown = model.chat.completions.create(
+    model = "chatgpt-4o-latest",
+    messages = [
+        {"role": "system", "content": "You are an assistant that will summarize and format user actions into markdown."},
+        {"role": "user", "content": 
+        f"""
+
+        You will be given a list of user actions that have been nicely formatted into markdown.
+        Given this list, you are to add a markdown summary that explains in a concise, readable way what the user did throughout the list actions. 
+        Further, you must add the "User Interactions" header to the original input, and the "Summary" header to the summary.
+
+        Here's an example:
+        Input: 
+        - Clicked on wallet image at wallets_test.com
+        - Highlighted description of wallet under image.
+        - Highlighted wallet rating.
+        - Clicked on section for wallet comments.
+        - Typed in wallet question box.
+        - Submitted question regarding wallet. 
+        Output:
+        ##User Interactions
+        - Clicked on wallet image at wallets_test.com
+        - Highlighted description of wallet under image.
+        - Highlighted wallet rating.
+        - Clicked on section for wallet comments.
+        - Typed in wallet question box.
+        - Submitted question regarding wallet. 
+        ##User Summary
+        The user explored a wallet product page by viewing the image, highlighting key details (description and rating), checking the comments section, and finally typing and submitting a question about the wallet.
+
+        
+        Notice how the example summary avoids complex words and overall wordiness.
+        Note: You may NOT change the input at all.
+        The only things you can do are:
+        1.) Give a summary of the user's actions. (must do)
+        2.) Add "User Interactions" and "Summary" Headers (must do)
+        2.) Make the entire markdown style consistent and visually aesthetic. That is, after deciding what the best style is for the user to visually understand the input, you should apply this style to the entire markdown before returning the result.
+
+        
+        Now, it is your turn. Return the original input followed by the user summary in markdown. Here is the input list:
+        {responses}
+        """
+    }]
+)
+summarized_markdown = summarized_markdown.choices[0].message.content
+with open ("./output/summary.md", "w") as f:
+    f.write(summarized_markdown) 
