@@ -190,14 +190,13 @@ summarized_markdown = model.chat.completions.create(
         ##User Summary
         The user explored a wallet product page by viewing the image, highlighting key details (description and rating), checking the comments section, and finally typing and submitting a question about the wallet.
 
-        
         Notice how the example summary avoids complex words and overall wordiness.
+        Note: The summary doesn't need to get ALL the detail. Just the main jist of what's going on and the user's course of action. It shouldn't feel like a repetition of the original list.
         Note: You may NOT change the input at all.
         The only things you can do are:
         1.) Give a summary of the user's actions. (must do)
         2.) Add "User Interactions" and "Summary" Headers (must do)
-        2.) Make the entire markdown style consistent and visually aesthetic. That is, after deciding what the best style is for the user to visually understand the input, you should apply this style to the entire markdown before returning the result.
-
+        3.) Make the entire markdown style consistent and visually aesthetic. That is, after deciding what the best style is for the user to visually understand the input, you should apply this style to the entire markdown before returning the result.
         
         Now, it is your turn. Return the original input followed by the user summary in markdown. Here is the input list:
         {refined_list}
