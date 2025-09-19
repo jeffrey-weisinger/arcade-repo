@@ -1,9 +1,10 @@
 import json
 import os
+import base64
 from openai import OpenAI
 from dotenv import load_dotenv
 
-#1.) Extract all key information from flow.json. 
+#Extract all key information from flow.json. 
 flowData = dict()
 with open ("./data/flow.json", "r") as f:
     flowData = json.load(f)
@@ -25,7 +26,7 @@ for i, step in enumerate(steps):
     stepInformation = dict()
     id = step["id"]
     if id not in capturedEventsDict.keys() and step["type"] != "CHAPTER":
-        continue
+        continue    
     #These generally capture a broad user choice (e.g. starting/restarting activity). This is a good anchor point to begin.
     if step["type"] == "CHAPTER":
         stepInformation["Note"] = "This action is the beginning of a sequence of steps."
@@ -57,16 +58,12 @@ for i, step in enumerate(steps):
             stepInformation["User Action"] = step["hotspots"][0]["label"]
     coreInformation.append(stepInformation)
 
-# for info in coreInformation:
-#     print(info)
-#     print("")
-
-#2.) 
 load_dotenv()
 api_key = os.getenv("API_KEY")
 model = OpenAI(api_key = api_key)
 
 responses = []
+#Summarizes responses individually.
 for info in coreInformation:
     #Since responses are so short, there is no need to use the strongest model.
     response = model.chat.completions.create(
@@ -103,6 +100,7 @@ for info in coreInformation:
     )
     responses.append(response.choices[0].message.content)
 
+#Makes responses more human-readable and less repetitive.
 refined_list = model.chat.completions.create(
     model = "chatgpt-4o-latest",
     messages = [
@@ -157,7 +155,8 @@ refined_list = model.chat.completions.create(
         """
     }]
 )
-# 
+
+#Implements summary in markdown after user actions.
 summarized_markdown = model.chat.completions.create(
     model = "chatgpt-4o-latest",
     messages = [
@@ -202,6 +201,50 @@ summarized_markdown = model.chat.completions.create(
         """
     }]
 )
+#Outputs result to output folder.
 summarized_markdown = summarized_markdown.choices[0].message.content
 with open ("./output/summary.md", "w") as f:
     f.write(summarized_markdown) 
+
+#Creates social media image.
+social_media_image = model.images.generate(
+    model = "gpt-image-1",
+    size="1024x1024",
+    prompt = f"""
+        You are a social media designer that will create a social media image given user actions flow and a summary.
+
+        You will be given markdown information of individual user actions and a summary.
+        Given this list, you are to add a markdown summary that explains in a concise, readable way what the user did throughout the list actions. 
+        Further, you must add the "User Interactions" header to the original input, and the "Summary" header to the summary.
+
+        Here's an example:
+        Input: 
+        ##User Interactions
+        - Clicked on wallet image at wallets_test.com
+        - Highlighted description of wallet under image.
+        - Highlighted wallet rating.
+        - Clicked on section for wallet comments.
+        - Typed in wallet question box.
+        - Submitted question regarding wallet. 
+        ##User Summary
+        The user explored a wallet product page by viewing the image, highlighting key details (description and rating), checking the comments section, and finally typing and submitting a question about the wallet.
+
+        Output: 
+        Image where flow should appear as a clear left-to-right (or top-to-bottom) sequence of steps connected by arrows, each paired with a simple icon and short label, ending in a bold summary box. 
+        Modern, minimal design with a professional color palette (teal/blue/white) and clear typography and non-transparent background. Avoids awkward chunks of whitespace. The title is 2-3 words about the ease of buying the product. 
+        Designed to grab attention and stand out in social media feeds, while maintaining an air of professionality. Is concise where words are necessary, often opting for icons where possible. Focuses on sleek functionality of application.
+        Ignores sections from the input with possible negative connotations. Focuses on what the user did, ignoring what the user did not do. Uses exclamation marks and conveys excitement about the product and usage tools.
+        Does NOT include any Summary sections and instead provides eye-catching visuals of a satisfied customer (in the same art style) interacting with their purchased product. The satisfied user takes up about 35-45% of the lower image.
+        Focuses largely on catching user attention and providing aesthetic user engagement. 
+        
+        Now, it is your turn.
+
+        Here is the input markdown:
+        {responses}
+    """
+)   
+image_base64 = social_media_image.data[0].b64_json 
+image_bytes = base64.b64decode(image_base64)
+
+with open("./output/social_media_image.png", "wb") as f:
+    f.write(image_bytes)

@@ -1,12 +1,12 @@
 ## User Interactions
-- Clicked 'Get Started' to add scooter  
+- Clicked button to get started on scooter cart  
 - Tapped search bar on Target homepage.  
-- Clicked scooter image for more features  
-- Selected color for scooter personalization.  
-- Explored additional color options for scooter.  
-- Clicked "Add to cart" for scooter  
-- Selected to decline protection plan coverage.  
-- Visited cart to review selected items.  
+- Clicked on scooter image for details  
+- Chose color to personalize scooter selection.  
+- Explored additional color choices for scooter  
+- Clicked "Add to cart" for scooter item  
+- Selected to decline protection plan on scooter page.  
+- Visited cart to review items and checkout  
 
 ## User Summary
-The user began the process of adding a scooter by selecting 'Get Started', searched for it on the Target homepage, explored its features and color options, added the scooter to their cart, declined extra protection, and reviewed the selected items in the cart.
+The user began exploring scooters on Target's site, searched and viewed a specific item, customized the color, added it to the cart, declined the protection plan, and proceeded to the cart to check out.
